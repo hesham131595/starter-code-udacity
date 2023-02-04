@@ -98,7 +98,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build1]
+          keys: [backend-build]
       - run:
           name: Back-end build
           command: |
@@ -107,7 +107,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build1
+          key: backend-build
 
   test-frontend:
     docker:
@@ -342,7 +342,7 @@ jobs:
             # apk add --no-cache aws-cli
             pip3 install awscli 
             apk add --update tar gzip
-            apk add --update nodejs npm
+            apk add --update nodejs npm curl
       - run:
           name: Get backend url
           command: |
@@ -363,7 +363,7 @@ jobs:
             npm run build
             ls dist
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-0837f52 --recursive
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure      
       - destroy-environment:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
@@ -392,7 +392,7 @@ jobs:
             # apk add --no-cache aws-cli
             pip3 install awscli 
             apk add --update tar gzip
-            apk add --update nodejs npm
+            apk add --update nodejs npm curl
       - run:
           name: Deploy
           command:  |
@@ -514,7 +514,7 @@ jobs:
 #           command: |
 #             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
 #             then
-#               # your code here
+#               # your code here ok
 #             fi
             
 
@@ -522,33 +522,17 @@ workflows:
   development_workflow:
     jobs:
       - build-frontend:
-          filters:
-            branches:
-              only: dev-branch
       - build-backend:
-          filters:
-            branches:
-              only: dev-branch
       - test-frontend:
           requires: [build-frontend]
-          filters:
-            branches:
-              only: dev-branch
       - test-backend:
           requires: [build-backend]
-          filters:
-            branches:
-              only: dev-branch
       - scan-backend:
           requires: [build-backend]
-          filters:
-            branches:
-              only: dev-branch
       - scan-frontend:
           requires: [build-frontend]
-          filters:
-            branches:
-              only: dev-branch
+    # triggers:
+    #   - branch: dev
   deploy_workflow:
     jobs:
       - deploy-infrastructure
